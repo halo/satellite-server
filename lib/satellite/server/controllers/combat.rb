@@ -1,10 +1,12 @@
 require 'ostruct'
-require 'satellite/server/models/space'
 require 'satellite/server/models/field'
 require 'satellite/server/models/object/car'
 require 'satellite/server/models/player'
 require 'satellite/server/models/camera'
 require 'satellite/server/controllers/default'
+require 'satellite/server/controllers/managers/broker'
+require 'satellite/server/controllers/managers/space'
+require 'satellite/server/controllers/managers/presence'
 
 module Satellite
   module Server
@@ -12,13 +14,18 @@ module Satellite
       class Combat < Default
         include Models
 
+        attr_reader :broker
+
         def initialize(options={})
           super
-          @players = options[:players]
-          @space = Space.new
+          @broker = Managers::Broker.new
+          @broker.add_consumer Managers::Presence.new
+          @broker.add_consumer Managers::Space.new
         end
 
         def on_event(event)
+          send_message :network_event, event
+
           player = Player.find(event.sender_id)
           case event.kind
           when :leave
@@ -45,7 +52,7 @@ module Satellite
         end
 
         def update
-          @events_to_send = []
+          broker.dispatch
           update_space
           enqueue_fields
         end
@@ -95,6 +102,10 @@ module Satellite
             field.camera = Camera.new(object: player.object)
             send_event player.id, :field, field.export
           end
+        end
+
+        def send_message(kind, data)
+          Managers::Broker::Message.new(kind: kind, data: data)
         end
 
       end

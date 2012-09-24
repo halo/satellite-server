@@ -59,6 +59,8 @@ module Satellite
         def update
         end
 
+        # Internal: Convenience callback update that is only evoked seldom enough for sending frequent network events.
+        #
         def throttled_update
         end
 
