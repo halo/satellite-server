@@ -2,17 +2,15 @@ require 'satellite/log'
 require 'satellite/extensions/core/string/inflections'
 require 'satellite/extensions/core/object/underscored_class_name'
 require 'satellite/extensions/core/time/milliseconds'
+require 'satellite/server/controllers/shared/event_sender'
 
 module Satellite
   module Server
     module Controllers
       class Default
-        attr_reader :events_to_send, :replace
+        include Shared::EventSender
 
-        def initialize(options={})
-          @events_to_send = []
-        end
-
+        attr_reader :replace
         # Public: Step 1 of 2 of the life-cycle. It gathers all messages from all clients.
         #         This method is called once per network event.
         #
@@ -62,18 +60,6 @@ module Satellite
         # Internal: Convenience callback update that is only evoked seldom enough for sending frequent network events.
         #
         def throttled_update
-        end
-
-        # Internal: Enqueues a network event to be sent to all clients.
-        #
-        def broadcast(kind, data=nil)
-          events_to_send << GameSocket::Event.new(kind: kind, data: data)
-        end
-
-        # Internal: Enqueues a network event to be sent to one client.
-        #
-        def send_event(receiver_id, kind, data=nil)
-          events_to_send << GameSocket::Event.new(receiver_id: receiver_id, kind: kind, data: data)
         end
 
         # Internal: Inform all clients of the current controller.

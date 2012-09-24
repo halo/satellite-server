@@ -1,23 +1,22 @@
-require 'satellite/log'
-
 module Satellite
   module Server
     module Controllers
       module Managers
         class Broker
 
-          # Internal: Message queue container.
-          attr_reader :queue
-
-          # Internal: Instances of the consumers.
-          attr_reader :consumers
-
+          # Public: A simple container to contain a message.
           class Message
             def initialize(options={})
               @kind = options[:kind]
               @data = options[:data]
             end
           end
+
+          # Internal: Message queue container.
+          attr_reader :queue
+
+          # Internal: Instances of the consumers.
+          attr_reader :consumers
 
           def initialize
             reset!
@@ -28,7 +27,7 @@ module Satellite
           end
 
           def <<(message)
-            return unless message.is_a?(Message)
+            raise "This is not a message: #{message}" unless message.is_a?(Message)
             queue << message
           end
 
@@ -45,7 +44,7 @@ module Satellite
             end
           end
 
-          # Internal: Rrset consumers and message queue. Useful for testing<tt>.</tt>
+          # Internal: Rrset consumers and message queue. Useful for testing.
           def reset!
             @queue = []
             @consumers = []
